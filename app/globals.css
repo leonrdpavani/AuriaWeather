@@ -1,26 +1,119 @@
 @import "tailwindcss";
 
+/* ============================================================================
+   Design tokens (fonte única de cor / espaço / tipografia / raio / sombra).
+   Em Tailwind v4 os tokens vivem aqui no @theme e viram utilitários.
+   Tokens de MOVIMENTO (durations/easings/variants) ficam em ui/tokens/motion.ts
+   ============================================================================ */
+@theme {
+  /* Tipografia */
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  /* Marca — índigo/violeta (base do app) */
+  --color-brand-50: #eef0ff;
+  --color-brand-100: #e0e3ff;
+  --color-brand-200: #c6caff;
+  --color-brand-300: #a3a6ff;
+  --color-brand-400: #847dfd;
+  --color-brand-500: #6c5cf5;
+  --color-brand-600: #5a3fe6;
+  --color-brand-700: #4c30c9;
+  --color-brand-800: #3f2aa2;
+  --color-brand-900: #362a80;
+  --color-brand-950: #211a4d;
+
+  /* Acento — ciano (chuva / destaques, como na referência) */
+  --color-accent-300: #7ee7ff;
+  --color-accent-400: #38d0ff;
+  --color-accent-500: #14b5f0;
+
+  /* Superfícies / glass */
+  --color-surface: #0b0a1f;
+  --color-surface-elevated: #14122e;
+  --color-glass: oklch(1 0 0 / 0.06);
+  --color-glass-strong: oklch(1 0 0 / 0.1);
+  --color-glass-border: oklch(1 0 0 / 0.1);
+
+  /* Texto */
+  --color-ink: #f5f4ff;
+  --color-ink-muted: oklch(0.86 0.02 290 / 0.66);
+  --color-ink-subtle: oklch(0.86 0.02 290 / 0.42);
+
+  /* Estados */
+  --color-success: #3ddc97;
+  --color-warning: #ffc24b;
+  --color-danger: #ff6b81;
+
+  /* Raio */
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.75rem;
+  --radius-3xl: 2.25rem;
+
+  /* Sombra */
+  --shadow-glass: 0 8px 32px -8px oklch(0.2 0.1 280 / 0.5);
+  --shadow-glow: 0 0 40px -8px var(--color-brand-400);
+
+  /* Animações expostas como tokens do tema */
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-float-slow: float 9s ease-in-out infinite;
+  --animate-aurora: aurora 18s ease-in-out infinite;
+  --animate-shimmer: shimmer 1.6s linear infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes aurora {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(6%, -8%) scale(1.1); }
+  66% { transform: translate(-6%, 6%) scale(0.95); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ============================================================================
+   Base
+   ============================================================================ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: dark;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-surface);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+/* Utilitário de vidro reutilizável (usado pelos primitivos de ui/) */
+@utility glass {
+  background-color: var(--color-glass);
+  border: 1px solid var(--color-glass-border);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+}
+
+/* Scrollbar discreta para as linhas roláveis (hourly) */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
+/* Respeita usuários que preferem menos movimento */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }
