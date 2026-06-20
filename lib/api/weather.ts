@@ -6,8 +6,9 @@
  * dependência. A feature de clima reexporta/estende estes tipos em
  * features/weather/types.ts.
  *
- * Hoje `getWeather` devolve dados MOCK (modo visual). Quando o backend existir,
- * troca-se o corpo por `apiFetch` — a assinatura permanece igual.
+ * Hoje `getWeather` devolve dados MOCK (modo visual) — agora com DETALHE por
+ * dia, para que selecionar um dia troque herói + abas. Quando o backend
+ * existir, troca-se o corpo por `apiFetch`; a assinatura permanece igual.
  */
 
 /** Condições suportadas — alinhadas aos ícones animados (meteocons). */
@@ -42,15 +43,6 @@ export interface HourlyPoint {
   precipProbability: number;
 }
 
-export interface DailyPoint {
-  /** ISO date. */
-  date: string;
-  condition: WeatherCondition;
-  highC: number;
-  lowC: number;
-  precipProbability: number;
-}
-
 export type AlertSeverity = "advisory" | "watch" | "warning";
 
 export interface WeatherAlert {
@@ -60,37 +52,43 @@ export interface WeatherAlert {
   description: string;
 }
 
-export interface CurrentConditions {
+/** Clima completo de um único dia (hoje ou futuro). */
+export interface DayWeather {
+  /** ISO date. */
+  date: string;
+  /** true = paleta/ícones de dia. */
+  isDay: boolean;
+  condition: WeatherCondition;
+  /** Texto curto: "Mostly Clear". */
+  summary: string;
+  /** Temperatura representativa (hoje = agora; futuro = meio-dia). */
   tempC: number;
   feelsLikeC: number;
   highC: number;
   lowC: number;
-  condition: WeatherCondition;
-  /** Texto curto: "Mostly Clear". */
-  summary: string;
   humidity: number;
   /** km/h e direção em graus. */
   windKph: number;
   windDir: number;
-  /** mm na última hora. */
+  /** mm na última hora (hoje) / acumulado previsto (futuro). */
   rainfallMm: number;
   /** km. */
   visibilityKm: number;
   /** hPa. */
   pressureHpa: number;
   uvIndex: number;
+  /** Probabilidade de precipitação do dia 0–100. */
+  precipProbability: number;
+  airQuality: AirQuality;
+  sun: { sunrise: string; sunset: string };
+  hourly: HourlyPoint[];
 }
 
 export interface WeatherData {
   city: string;
   country: string;
-  /** true = dia, false = noite (controla paleta/ícones). */
-  isDay: boolean;
-  current: CurrentConditions;
-  hourly: HourlyPoint[];
-  daily: DailyPoint[];
-  airQuality: AirQuality;
-  sun: { sunrise: string; sunset: string };
+  /** 7 dias; days[0] é hoje. */
+  days: DayWeather[];
   alerts: WeatherAlert[];
 }
 
@@ -186,13 +184,26 @@ const CITY_SEEDS: Record<string, CitySeed> = {
   },
 };
 
-const HOURLY_CONDITIONS: WeatherCondition[] = [
+const FORECAST_CONDITIONS: WeatherCondition[] = [
   "clear",
   "partly-cloudy",
   "cloudy",
   "drizzle",
   "rain",
 ];
+
+const SUMMARIES: Record<WeatherCondition, string> = {
+  clear: "Clear Sky",
+  "partly-cloudy": "Partly Cloudy",
+  cloudy: "Cloudy",
+  overcast: "Overcast",
+  fog: "Foggy",
+  drizzle: "Light Drizzle",
+  rain: "Rain Showers",
+  thunderstorm: "Thunderstorms",
+  snow: "Snow",
+  windy: "Windy",
+};
 
 function aqiToLevel(aqi: number): AirQuality {
   if (aqi <= 50) return { aqi, level: 1, label: "Low Health Risk" };
@@ -209,59 +220,91 @@ function seeded(seed: number) {
   return () => (s = (s * 16807) % 2147483647) / 2147483647;
 }
 
-function buildHourly(seed: CitySeed, rnd: () => number): HourlyPoint[] {
-  const start = new Date();
-  start.setMinutes(0, 0, 0);
+function buildHourly(
+  dayStart: Date,
+  baseTempC: number,
+  dayCondition: WeatherCondition,
+  isToday: boolean,
+  rnd: () => number,
+): HourlyPoint[] {
   return Array.from({ length: 24 }, (_, i) => {
-    const time = new Date(start.getTime() + i * 3600_000);
-    const swing = Math.sin((i / 24) * Math.PI * 2) * 4;
+    const time = new Date(dayStart.getTime() + i * 3600_000);
+    const swing = Math.sin((i / 24) * Math.PI * 2 - Math.PI / 2) * 5;
     return {
       time: time.toISOString(),
-      tempC: Math.round(seed.baseTempC + swing + (rnd() - 0.5) * 2),
+      tempC: Math.round(baseTempC + swing + (rnd() - 0.5) * 2),
       condition:
-        i === 0
-          ? seed.condition
-          : HOURLY_CONDITIONS[Math.floor(rnd() * HOURLY_CONDITIONS.length)],
-      precipProbability: Math.round(rnd() * 60),
+        isToday && i === 0
+          ? dayCondition
+          : FORECAST_CONDITIONS[
+              Math.floor(rnd() * FORECAST_CONDITIONS.length)
+            ],
+      precipProbability: Math.round(rnd() * 70),
     };
   });
 }
 
-function buildDaily(seed: CitySeed, rnd: () => number): DailyPoint[] {
-  const start = new Date();
-  start.setHours(0, 0, 0, 0);
-  return Array.from({ length: 7 }, (_, i) => {
-    const date = new Date(start.getTime() + i * 86_400_000);
-    const high = Math.round(seed.baseTempC + 4 + (rnd() - 0.5) * 3);
-    return {
-      date: date.toISOString(),
-      condition:
-        i === 0
-          ? seed.condition
-          : HOURLY_CONDITIONS[Math.floor(rnd() * HOURLY_CONDITIONS.length)],
-      highC: high,
-      lowC: high - Math.round(4 + rnd() * 4),
-      precipProbability: Math.round(rnd() * 80),
-    };
-  });
-}
-
-function buildSun(isDay: boolean) {
-  const base = new Date();
-  const sunrise = new Date(base);
+function buildSun(dayStart: Date) {
+  const sunrise = new Date(dayStart);
   sunrise.setHours(5, 28, 0, 0);
-  const sunset = new Date(base);
+  const sunset = new Date(dayStart);
   sunset.setHours(19, 25, 0, 0);
-  return { sunrise: sunrise.toISOString(), sunset: sunset.toISOString(), isDay };
+  return { sunrise: sunrise.toISOString(), sunset: sunset.toISOString() };
+}
+
+function buildDay(seed: CitySeed, i: number, rnd: () => number): DayWeather {
+  const isToday = i === 0;
+  const midnight = new Date();
+  midnight.setHours(0, 0, 0, 0);
+  const dayStart = new Date(midnight.getTime() + i * 86_400_000);
+
+  const condition = isToday
+    ? seed.condition
+    : FORECAST_CONDITIONS[Math.floor(rnd() * FORECAST_CONDITIONS.length)];
+
+  const baseTempC = seed.baseTempC + Math.round((rnd() - 0.5) * 6);
+  const hourly = buildHourly(dayStart, baseTempC, condition, isToday, rnd);
+
+  const temps = hourly.map((h) => h.tempC);
+  const highC = Math.max(...temps);
+  const lowC = Math.min(...temps);
+  const tempC = isToday ? seed.baseTempC : hourly[13].tempC;
+  const aqi = Math.round(clampNum(seed.aqi + (rnd() - 0.5) * 40, 10, 280));
+
+  return {
+    date: dayStart.toISOString(),
+    isDay: isToday ? seed.isDay : true,
+    condition,
+    summary: isToday ? seed.summary : SUMMARIES[condition],
+    tempC,
+    feelsLikeC: tempC - 1 - Math.round(rnd() * 2),
+    highC,
+    lowC,
+    humidity: 40 + Math.round(rnd() * 45),
+    windKph: isToday ? seed.windKph : Math.round(8 + rnd() * 22),
+    windDir: Math.round(rnd() * 360),
+    rainfallMm: isToday
+      ? seed.rainfallMm
+      : Math.round(rnd() * 80) / 10,
+    visibilityKm: 8 + Math.round(rnd() * 6),
+    pressureHpa: 1008 + Math.round(rnd() * 14),
+    uvIndex: isToday ? seed.uvIndex : Math.round(rnd() * 11),
+    precipProbability: Math.max(...hourly.map((h) => h.precipProbability)),
+    airQuality: aqiToLevel(aqi),
+    sun: buildSun(dayStart),
+    hourly,
+  };
+}
+
+function clampNum(v: number, min: number, max: number) {
+  return Math.min(Math.max(v, min), max);
 }
 
 function buildData(seed: CitySeed): WeatherData {
   const rnd = seeded(
     seed.city.split("").reduce((a, c) => a + c.charCodeAt(0), 0),
   );
-  const hourly = buildHourly(seed, rnd);
-  const daily = buildDaily(seed, rnd);
-  const sun = buildSun(seed.isDay);
+  const days = Array.from({ length: 7 }, (_, i) => buildDay(seed, i, rnd));
 
   const alerts: WeatherAlert[] =
     seed.condition === "thunderstorm"
@@ -276,31 +319,7 @@ function buildData(seed: CitySeed): WeatherData {
         ]
       : [];
 
-  return {
-    city: seed.city,
-    country: seed.country,
-    isDay: seed.isDay,
-    current: {
-      tempC: seed.baseTempC,
-      feelsLikeC: seed.baseTempC - 1,
-      highC: daily[0].highC,
-      lowC: daily[0].lowC,
-      condition: seed.condition,
-      summary: seed.summary,
-      humidity: 40 + Math.round(rnd() * 45),
-      windKph: seed.windKph,
-      windDir: Math.round(rnd() * 360),
-      rainfallMm: seed.rainfallMm,
-      visibilityKm: 8 + Math.round(rnd() * 6),
-      pressureHpa: 1008 + Math.round(rnd() * 14),
-      uvIndex: seed.uvIndex,
-    },
-    hourly,
-    daily,
-    airQuality: aqiToLevel(seed.aqi),
-    sun: { sunrise: sun.sunrise, sunset: sun.sunset },
-    alerts,
-  };
+  return { city: seed.city, country: seed.country, days, alerts };
 }
 
 /** Cidades disponíveis no mock (para a busca). */

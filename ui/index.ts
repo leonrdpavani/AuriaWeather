@@ -15,3 +15,5 @@ export {
 export { MetricTile } from "./patterns/MetricTile";
 export { SectionHeader } from "./patterns/SectionHeader";
 export { ScrollRow } from "./patterns/ScrollRow";
+export { FloatingDock, type DockItem } from "./patterns/FloatingDock";
+export { EmptyState } from "./patterns/EmptyState";

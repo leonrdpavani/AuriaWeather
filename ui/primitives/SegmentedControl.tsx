@@ -1,6 +1,6 @@
 "use client";
 
-import { useId } from "react";
+import { useId, type ReactNode } from "react";
 import { motion } from "framer-motion";
 import { ease } from "@/ui/tokens/motion";
 import { cn } from "@/lib/utils/cn";
@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils/cn";
 export interface SegmentOption<T extends string> {
   value: T;
   label: string;
+  /** Ícone opcional à esquerda do rótulo. */
+  icon?: ReactNode;
 }
 
 interface SegmentedControlProps<T extends string> {
@@ -46,7 +48,7 @@ export function SegmentedControl<T extends string>({
             aria-selected={active}
             onClick={() => onChange(option.value)}
             className={cn(
-              "relative rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
+              "relative inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
               "outline-none focus-visible:ring-2 focus-visible:ring-brand-400",
               active ? "text-white" : "text-ink-muted hover:text-ink",
             )}
@@ -57,6 +59,9 @@ export function SegmentedControl<T extends string>({
                 transition={ease.spring}
                 className="absolute inset-0 rounded-full bg-brand-500 shadow-glow"
               />
+            )}
+            {option.icon && (
+              <span className="relative z-10 [&>svg]:size-4">{option.icon}</span>
             )}
             <span className="relative z-10">{option.label}</span>
           </button>

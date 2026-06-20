@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { MapPin, Search } from "lucide-react";
+import { IconMapPinFilled, IconSearchFilled } from "@tabler/icons-react";
 import { GlassCard } from "@/ui";
 import { listCities } from "@/lib/api/weather";
 import { cn } from "@/lib/utils/cn";
@@ -37,7 +37,7 @@ export function CitySearch({ onSelect, className }: CitySearchProps) {
   return (
     <div className={cn("relative w-full max-w-md", className)}>
       <div className="glass flex items-center gap-2 rounded-full px-4 py-2.5">
-        <Search className="size-4 shrink-0 text-ink-subtle" />
+        <IconSearchFilled className="size-4 shrink-0 text-ink-subtle" />
         <input
           value={query}
           onChange={(e) => {
@@ -68,7 +68,7 @@ export function CitySearch({ onSelect, className }: CitySearchProps) {
                   onMouseDown={() => choose(c.city)}
                   className="flex w-full items-center gap-2.5 rounded-2xl px-3 py-2.5 text-left transition-colors hover:bg-glass-strong"
                 >
-                  <MapPin className="size-4 text-ink-subtle" />
+                  <IconMapPinFilled className="size-4 text-ink-subtle" />
                   <span className="text-sm font-medium text-ink">{c.city}</span>
                   <span className="text-xs text-ink-subtle">{c.country}</span>
                 </button>

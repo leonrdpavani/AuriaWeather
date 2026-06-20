@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { AlertTriangle } from "lucide-react";
+import { IconAlertTriangleFilled } from "@tabler/icons-react";
 import type { WeatherAlert } from "@/features/weather/types";
 import { cn } from "@/lib/utils/cn";
 
@@ -27,7 +27,7 @@ export function AlertBanner({ alerts }: { alerts: WeatherAlert[] }) {
             SEVERITY_STYLES[alert.severity],
           )}
         >
-          <AlertTriangle className="mt-0.5 size-5 shrink-0" />
+          <IconAlertTriangleFilled className="mt-0.5 size-5 shrink-0" />
           <div className="flex flex-col gap-0.5">
             <span className="text-sm font-semibold">{alert.title}</span>
             <span className="text-xs text-ink-muted">{alert.description}</span>

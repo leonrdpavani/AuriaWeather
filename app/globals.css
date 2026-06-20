@@ -87,12 +87,16 @@
 html {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  overflow-x: hidden;
 }
 
 body {
   background-color: var(--color-surface);
   color: var(--color-ink);
   font-family: var(--font-sans);
+  overflow-x: hidden;
+  /* Largura nunca maior que a viewport (guard contra scroll horizontal) */
+  max-width: 100%;
 }
 
 /* Utilitário de vidro reutilizável (usado pelos primitivos de ui/) */

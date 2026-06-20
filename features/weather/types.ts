@@ -7,9 +7,8 @@
  */
 export type {
   WeatherData,
-  CurrentConditions,
+  DayWeather,
   HourlyPoint,
-  DailyPoint,
   AirQuality,
   AirQualityLevel,
   WeatherAlert,
@@ -21,3 +20,6 @@ export type { Unit } from "@/lib/utils/format";
 
 /** Tema visual derivado da condição + dia/noite (usado pelo background). */
 export type WeatherTheme = "day-clear" | "day-cloudy" | "night" | "storm";
+
+/** Abas de detalhe do dia selecionado. */
+export type DayTab = "hourly" | "air" | "atmosphere" | "sun";
