@@ -22,4 +22,4 @@ export type { Unit } from "@/lib/utils/format";
 export type WeatherTheme = "day-clear" | "day-cloudy" | "night" | "storm";
 
 /** Abas de detalhe do dia selecionado. */
-export type DayTab = "hourly" | "air" | "atmosphere" | "sun";
+export type DayTab = "air" | "atmosphere" | "sun";

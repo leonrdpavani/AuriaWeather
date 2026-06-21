@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  IconClockFilled,
   IconDropletFilled,
   IconEyeFilled,
   IconGaugeFilled,
@@ -14,7 +13,6 @@ import {
   IconWindsockFilled,
 } from "@tabler/icons-react";
 import { MetricTile, SegmentedControl, type SegmentOption } from "@/ui";
-import { HourlyForecast } from "@/features/weather/components/HourlyForecast";
 import {
   Compass,
   LevelBar,
@@ -25,7 +23,6 @@ import type { DayTab, DayWeather, Unit } from "@/features/weather/types";
 import { toUnit } from "@/lib/utils/format";
 
 const TABS: SegmentOption<DayTab>[] = [
-  { value: "hourly", label: "Hourly", icon: <IconClockFilled /> },
   { value: "air", label: "Air", icon: <IconLungsFilled /> },
   { value: "atmosphere", label: "Atmosphere", icon: <IconWindsockFilled /> },
   { value: "sun", label: "Sun", icon: <IconSunFilled /> },
@@ -34,16 +31,14 @@ const TABS: SegmentOption<DayTab>[] = [
 interface DayDetailsTabsProps {
   day: DayWeather;
   unit: Unit;
-  /** Mostra "Now" no hourly só quando o dia selecionado é hoje. */
-  isToday: boolean;
 }
 
 /**
  * Abas com as informações detalhadas do DIA SELECIONADO.
  * Substitui os cards espalhados: o usuário alterna o conteúdo aqui.
  */
-export function DayDetailsTabs({ day, unit, isToday }: DayDetailsTabsProps) {
-  const [tab, setTab] = useState<DayTab>("hourly");
+export function DayDetailsTabs({ day, unit }: DayDetailsTabsProps) {
+  const [tab, setTab] = useState<DayTab>("air");
 
   return (
     <div className="flex flex-col gap-4">
@@ -64,15 +59,6 @@ export function DayDetailsTabs({ day, unit, isToday }: DayDetailsTabsProps) {
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
         >
-          {tab === "hourly" && (
-            <HourlyForecast
-              hours={day.hourly}
-              isDay={day.isDay}
-              unit={unit}
-              showNow={isToday}
-            />
-          )}
-
           {tab === "air" && (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <MetricTile

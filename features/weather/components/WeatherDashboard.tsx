@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   IconCloudFilled,
@@ -10,10 +11,11 @@ import { useWeather } from "@/features/weather/hooks/useWeather";
 import { CurrentWeather } from "@/features/weather/components/CurrentWeather";
 import { DayDetailsTabs } from "@/features/weather/components/DayDetailsTabs";
 import { DaySelector } from "@/features/weather/components/DaySelector";
+import { HourlyForecast } from "@/features/weather/components/HourlyForecast";
 import { WeatherBackground } from "@/features/weather/components/WeatherBackground";
 import { AlertBanner } from "@/features/weather/components/AlertBanner";
 import { CitySearch } from "@/features/weather/components/CitySearch";
-import type { Unit, WeatherData } from "@/features/weather/types";
+import type { HourlyPoint, Unit, WeatherData } from "@/features/weather/types";
 import { config } from "@/lib/config";
 import { formatWeekday } from "@/lib/utils/format";
 import { fadeUp, staggerContainer } from "@/ui/tokens/motion";
@@ -28,6 +30,21 @@ function dayLabel(index: number, iso: string): string {
   if (index === 0) return "Today";
   if (index === 1) return "Tomorrow";
   return formatWeekday(iso);
+}
+
+/**
+ * Próximas 24h a partir da hora atual, em passos de 2h (12 pontos).
+ * Atravessa para o dia seguinte quando necessário.
+ */
+function buildUpcoming(days: WeatherData["days"], nowMs: number): HourlyPoint[] {
+  const points = [...days[0].hourly, ...(days[1]?.hourly ?? [])];
+  const dayStart = new Date(days[0].date).getTime();
+  const startIdx = Math.max(0, Math.floor((nowMs - dayStart) / 3_600_000));
+  const out: HourlyPoint[] = [];
+  for (let i = startIdx; i < points.length && out.length < 12; i += 2) {
+    out.push(points[i]);
+  }
+  return out;
 }
 
 /**
@@ -52,6 +69,19 @@ export function WeatherDashboard({
 
   const selectedDay = data.days[selectedDayIndex];
   const isToday = selectedDayIndex === 0;
+
+  // "now" só no client (evita mismatch de hidratação por timezone/hora):
+  // lê o relógio do browser uma vez, depois da montagem. É justamente o caso
+  // legítimo de sincronizar um valor só-do-browser após montar.
+  const [nowMs, setNowMs] = useState<number | null>(null);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- valor só-do-client lido uma vez na montagem
+    setNowMs(Date.now());
+  }, []);
+  const upcoming = useMemo(
+    () => buildUpcoming(data.days, nowMs ?? new Date(data.days[0].date).getTime()),
+    [data.days, nowMs],
+  );
 
   return (
     <>
@@ -114,6 +144,16 @@ export function WeatherDashboard({
           />
         </motion.div>
 
+        {/* Carrossel das próximas 24h (passos de 2h, a partir de agora) */}
+        <motion.div variants={fadeUp}>
+          <HourlyForecast
+            hours={upcoming}
+            isDay={data.days[0].isDay}
+            unit={unit}
+            showNow
+          />
+        </motion.div>
+
         {/* Alertas (apenas no dia de hoje) */}
         {isToday && data.alerts.length > 0 && (
           <motion.div variants={fadeUp}>
@@ -124,7 +164,7 @@ export function WeatherDashboard({
         {/* Abas de detalhe + seletor de dias */}
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
           <motion.div variants={fadeUp} className="min-w-0 lg:col-span-2">
-            <DayDetailsTabs day={selectedDay} unit={unit} isToday={isToday} />
+            <DayDetailsTabs day={selectedDay} unit={unit} />
           </motion.div>
           <motion.div variants={fadeUp}>
             <DaySelector
