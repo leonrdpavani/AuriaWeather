@@ -17,9 +17,7 @@ export function formatTemp(celsius: number, unit: Unit = "celsius"): string {
 
 /** Hora curta a partir de um ISO string: "9 PM", "Now" tratado fora. */
 export function formatHour(iso: string): string {
-  return new Intl.DateTimeFormat("en-US", { hour: "numeric" }).format(
-    new Date(iso),
-  );
+  return `${String(new Date(iso).getHours()).padStart(2, "0")}h`;
 }
 
 /** Hora cheia: "5:28 AM". */

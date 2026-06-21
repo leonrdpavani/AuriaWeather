@@ -77,6 +77,41 @@
   100% { background-position: 200% 0; }
 }
 
+/* --- Fundo reativo ao clima (WeatherBackground / WeatherFX) --- */
+
+/* Nuvens atravessando o céu, da esquerda p/ a direita. */
+@keyframes drift {
+  from { transform: translate3d(-30vw, 0, 0); }
+  to   { transform: translate3d(130vw, 0, 0); }
+}
+
+/* Cintilar das estrelas. */
+@keyframes twinkle {
+  0%, 100% { opacity: 0.25; transform: scale(0.8); }
+  50%      { opacity: 1;    transform: scale(1); }
+}
+
+/* Bancos de névoa deslizando suavemente. */
+@keyframes fog-drift {
+  from { transform: translate3d(-12%, 0, 0); }
+  to   { transform: translate3d(12%, 0, 0); }
+}
+
+/* Respiração do brilho do sol/lua. */
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.85; transform: scale(1); }
+  50%      { opacity: 1;    transform: scale(1.05); }
+}
+
+/* Flash de relâmpago (escuro quase o tempo todo, com clarões rápidos). */
+@keyframes flash {
+  0%, 68%, 100% { opacity: 0; }
+  69% { opacity: 0.4; }
+  71% { opacity: 0.1; }
+  73% { opacity: 0.6; }
+  77% { opacity: 0; }
+}
+
 /* ============================================================================
    Base
    ============================================================================ */

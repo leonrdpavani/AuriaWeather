@@ -122,8 +122,8 @@ export function WeatherDashboard({
         )}
 
         {/* Abas de detalhe + seletor de dias */}
-        <div className="grid gap-5 lg:grid-cols-3">
-          <motion.div variants={fadeUp} className="lg:col-span-2">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+          <motion.div variants={fadeUp} className="min-w-0 lg:col-span-2">
             <DayDetailsTabs day={selectedDay} unit={unit} isToday={isToday} />
           </motion.div>
           <motion.div variants={fadeUp}>

@@ -16,7 +16,17 @@ interface HourlyForecastProps {
   showNow?: boolean;
 }
 
-/** Previsão hora a hora — linha rolável (usada no painel da aba "Hourly"). */
+/** Dia/noite por hora (≈06h–19h é dia) para o ícone refletir o horário. */
+function isDaytime(iso: string): boolean {
+  const h = new Date(iso).getHours();
+  return h >= 6 && h < 19;
+}
+
+/**
+ * Previsão hora a hora — carrossel horizontal (aba "Hourly").
+ * Cada coluna empilha, de cima p/ baixo: temperatura, chance de chuva,
+ * ícone do clima e a hora.
+ */
 export function HourlyForecast({
   hours,
   isDay,
@@ -29,25 +39,21 @@ export function HourlyForecast({
         <ScrollRow>
           {hours.map((hour, i) => (
             <motion.div key={hour.time} variants={fadeUp}>
-              <div className="flex w-[72px] snap-start flex-col items-center gap-2 rounded-2xl px-2 py-3 transition-colors hover:bg-glass">
-                <span className="text-xs font-medium text-ink-muted">
-                  {showNow && i === 0 ? "Now" : formatHour(hour.time)}
+              <div className="flex w-16 snap-start flex-col items-center gap-2 rounded-2xl px-2 py-3 transition-colors hover:bg-glass">
+                <span className="text-sm font-semibold text-ink tabular-nums">
+                  {toUnit(hour.tempC, unit)}°
+                </span>
+                <span className="inline-flex items-center gap-0.5 text-[11px] font-medium text-accent-400 tabular-nums">
+                  <IconDropletFilled className="size-2.5" />
+                  {hour.precipProbability}%
                 </span>
                 <WeatherIcon
                   condition={hour.condition}
-                  isDay={isDay}
+                  isDay={showNow && i === 0 ? isDay : isDaytime(hour.time)}
                   size={40}
                 />
-                {hour.precipProbability > 20 ? (
-                  <span className="inline-flex items-center gap-0.5 text-[11px] font-medium text-accent-400">
-                    <IconDropletFilled className="size-3" />
-                    {hour.precipProbability}%
-                  </span>
-                ) : (
-                  <span className="h-[15px]" />
-                )}
-                <span className="text-sm font-semibold text-ink tabular-nums">
-                  {toUnit(hour.tempC, unit)}°
+                <span className="text-xs font-medium text-ink-muted tabular-nums">
+                  {showNow && i === 0 ? "Now" : formatHour(hour.time)}
                 </span>
               </div>
             </motion.div>
