@@ -1,36 +1,69 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Auria Weather
 
-## Getting Started
+App de clima animado e imersivo, construído com **Expo** (React Native) — pronto
+para rodar em **Android, iOS e Web** a partir de uma única base de código.
 
-First, run the development server:
+> Migrado de um protótipo Next.js para Expo. A camada de lógica (API/tipos/
+> formatação) foi portada; toda a UI foi reescrita em React Native com paridade
+> visual (fundo reativo ao clima, partículas, ícones animados).
+
+## Stack
+
+- **Expo SDK 56** + **expo-router** (rotas por arquivo)
+- **NativeWind v4** (Tailwind no React Native)
+- **Reanimated 4 + Moti** (animações)
+- **react-native-svg**, **expo-linear-gradient**, **expo-blur** (efeitos)
+- **lucide-react-native** (ícones de UI)
+
+## Rodando o projeto
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npx expo start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Depois, no terminal do Expo:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- aperte **a** para abrir no emulador Android (ou escaneie o QR no app **Expo Go**)
+- aperte **i** para o simulador iOS (requer macOS)
+- aperte **w** para abrir no navegador
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Scripts
 
-## Learn More
+| Comando            | O que faz                                  |
+|--------------------|--------------------------------------------|
+| `npm start`        | Inicia o Metro / dev server do Expo        |
+| `npm run android`  | Abre no Android                            |
+| `npm run ios`      | Abre no iOS (macOS)                         |
+| `npm run web`      | Abre no navegador                          |
+| `npm run lint`     | ESLint (preset oficial do Expo)            |
+| `npm run typecheck`| `tsc --noEmit`                             |
 
-To learn more about Next.js, take a look at the following resources:
+## Estrutura
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Tudo vive em `src/` (alias `@/*`). As convenções de arquitetura — camadas,
+onde cada coisa vive, regras invioláveis — estão em [`ARQUITETURA.md`](./ARQUITETURA.md).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+src/
+  app/            # rotas (expo-router): _layout + grupo (tabs)
+  features/       # domínio (weather): components, hooks, types
+  ui/             # design system: primitives, patterns, tokens
+  lib/            # api, config, utils (sem plataforma)
+  components/     # chrome de tela compartilhado
+  constants/      # paleta crua p/ ícones/SVG/gradientes
+```
 
-## Deploy on Vercel
+## Publicando (Play Store / App Store)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+O build de produção é feito com **EAS Build**:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm install -g eas-cli
+eas build --profile preview --platform android   # gera um APK instalável
+eas build --platform android                      # AAB para a Play Store
+eas build --platform ios                          # IPA para a App Store
+```
+
+Publicar de verdade exige conta **Google Play** (US$ 25, uma vez) e/ou **Apple
+Developer** (US$ 99/ano).
