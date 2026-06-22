@@ -29,15 +29,17 @@ interface Spec {
 }
 
 function specFor(type: Exclude<PrecipType, "none">): Spec {
+  // Contagens ajustadas para fluidez em celular real (cada partícula é uma View
+  // animada). Mantêm a sensação de "tela cheia" sem sobrecarregar a thread de UI.
   switch (type) {
     case "snow":
-      return { count: 55, snow: true, minDur: 5000, maxDur: 9000, drift: 24, color: "#ffffff" };
+      return { count: 36, snow: true, minDur: 5000, maxDur: 9000, drift: 24, color: "#ffffff" };
     case "drizzle":
-      return { count: 45, snow: false, minDur: 1600, maxDur: 2400, drift: 26, color: "rgba(196,226,255,0.5)" };
+      return { count: 28, snow: false, minDur: 1600, maxDur: 2400, drift: 26, color: "rgba(196,226,255,0.5)" };
     case "rain":
-      return { count: 75, snow: false, minDur: 900, maxDur: 1500, drift: 40, color: "rgba(196,226,255,0.55)" };
+      return { count: 46, snow: false, minDur: 900, maxDur: 1500, drift: 40, color: "rgba(196,226,255,0.55)" };
     case "heavy":
-      return { count: 110, snow: false, minDur: 600, maxDur: 1000, drift: 70, color: "rgba(210,232,255,0.6)" };
+      return { count: 66, snow: false, minDur: 600, maxDur: 1000, drift: 70, color: "rgba(210,232,255,0.6)" };
   }
 }
 

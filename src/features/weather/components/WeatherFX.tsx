@@ -46,27 +46,29 @@ function resolveScene(condition: WeatherCondition, isDay: boolean): Scene {
     lightning: false,
   };
 
+  // Contagens de estrelas/nuvens enxutas para boa fluidez em celular (cada
+  // estrela/nuvem é uma View animada na thread de UI).
   switch (condition) {
     case "clear":
-      return { ...base, celestial: body, stars: isDay ? 0 : 60 };
+      return { ...base, celestial: body, stars: isDay ? 0 : 40 };
     case "partly-cloudy":
-      return { ...base, celestial: body, stars: isDay ? 0 : 32, clouds: 3 };
+      return { ...base, celestial: body, stars: isDay ? 0 : 22, clouds: 3 };
     case "cloudy":
-      return { ...base, celestial: body, celestialDim: true, clouds: 5, cloudTint: "grey" };
+      return { ...base, celestial: body, celestialDim: true, clouds: 4, cloudTint: "grey" };
     case "overcast":
-      return { ...base, clouds: 6, cloudTint: "dark", cloudSpeed: 120 };
+      return { ...base, clouds: 5, cloudTint: "dark", cloudSpeed: 120 };
     case "fog":
       return { ...base, celestial: body, celestialDim: true, clouds: 2, cloudTint: "grey", fog: true };
     case "drizzle":
-      return { ...base, clouds: 5, cloudTint: "grey", precip: "drizzle" };
+      return { ...base, clouds: 4, cloudTint: "grey", precip: "drizzle" };
     case "rain":
-      return { ...base, clouds: 6, cloudTint: "dark", precip: "rain" };
+      return { ...base, clouds: 5, cloudTint: "dark", precip: "rain" };
     case "thunderstorm":
-      return { ...base, clouds: 6, cloudTint: "dark", cloudSpeed: 65, precip: "heavy", lightning: true };
+      return { ...base, clouds: 5, cloudTint: "dark", cloudSpeed: 65, precip: "heavy", lightning: true };
     case "snow":
-      return { ...base, clouds: 5, cloudTint: "grey", precip: "snow", stars: isDay ? 0 : 16 };
+      return { ...base, clouds: 4, cloudTint: "grey", precip: "snow", stars: isDay ? 0 : 12 };
     case "windy":
-      return { ...base, celestial: body, clouds: 4, cloudSpeed: 38, stars: isDay ? 0 : 22 };
+      return { ...base, celestial: body, clouds: 4, cloudSpeed: 38, stars: isDay ? 0 : 18 };
   }
 }
 
