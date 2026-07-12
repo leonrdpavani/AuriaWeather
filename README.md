@@ -3,9 +3,9 @@
 App de clima animado e imersivo, feito com **Expo** (React Native) — roda em
 **Android, iOS e Web** a partir de uma única base de código.
 
-> Migrado de um protótipo Next.js para Expo. A lógica (API/tipos/formatação) foi
-> portada; toda a UI foi reescrita em React Native com paridade visual (fundo
-> reativo ao clima, partículas, ícones animados).
+> App 100% nativo em Expo / React Native, com fundo reativo ao clima,
+> partículas e ícones animados. Dados em modo mock por enquanto (prontos para
+> plugar uma API real).
 
 ## Stack
 

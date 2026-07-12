@@ -90,7 +90,7 @@ Se um arquivo precisa quebrar essa direção, ele está no lugar errado. Mover, 
   `react-native-svg` (`RadialGradient`).
 - **Animação:** `Moti` para entradas/transições declarativas; `Reanimated 4`
   (worklets) para loops contínuos e partículas. Easings/springs em
-  `@/ui/tokens/motion`. Nada de `framer-motion` (é web).
+  `@/ui/tokens/motion`. Não usar bibliotecas de animação feitas para web.
 - **Ícones:** `lucide-react-native` para UI; ícones de clima são SVG próprio em
   `features/weather/components/WeatherIcon.tsx`.
 

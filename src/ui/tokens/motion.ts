@@ -3,7 +3,7 @@ import type { MotiTransition } from "moti";
 
 /**
  * Tokens de movimento — fonte única de durações, easings e springs.
- * Porte do antigo ui/tokens/motion.ts (framer-motion) para Moti/Reanimated.
+ * Consumidos por Moti e Reanimated em todo o app.
  */
 
 /** Durações em milissegundos (Moti/Reanimated usam ms). */

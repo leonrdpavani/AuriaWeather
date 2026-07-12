@@ -27,8 +27,8 @@ function DockTabBar({ state, navigation }: BottomTabBarProps) {
 }
 
 /**
- * Navegação principal por tabs. O visual é o FloatingDock flutuante (substitui
- * o AppDock do Next). Telas: Home (clima), Cities, Radar, Settings.
+ * Navegação principal por tabs. O visual é o FloatingDock flutuante.
+ * Telas: Home (clima), Cities, Radar, Settings.
  */
 export default function TabsLayout() {
   return (

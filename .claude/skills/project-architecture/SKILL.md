@@ -1,15 +1,18 @@
 ---
 name: project-architecture
-description: Arquitetura e convenções obrigatórias deste frontend Next.js (camadas app→features→ui/lib, design system, lib/api, Server vs Client). Use SEMPRE que for criar, mover ou refatorar arquivos/pastas, scaffolding de feature, componente, chamada de API, ou decidir onde algo vive. Consulte ANTES de escrever código.
+description: Arquitetura e convenções obrigatórias deste app Expo / React Native (camadas app→features→ui/lib, design system, lib/api, expo-router, NativeWind). Use SEMPRE que for criar, mover ou refatorar arquivos/pastas, scaffolding de feature, componente, chamada de API, ou decidir onde algo vive. Consulte ANTES de escrever código.
 ---
 
-# Arquitetura & Convenções do projeto
+# Arquitetura & Convenções do projeto (Expo / React Native)
 
 Regras para qualquer dev (humano ou agente) que tocar neste projeto.
 **Não inventar estrutura nova. Não "melhorar" a organização por conta própria.**
 Seguir exatamente o que está descrito aqui. Na dúvida, perguntar antes de criar pasta.
 
-Fonte de verdade completa: `ARQUITETURA.md` na raiz do repositório. Esta Skill é o resumo operacional — em conflito, vale `ARQUITETURA.md`.
+Fonte de verdade completa: `ARQUITETURA.md` na raiz. Esta Skill é o resumo operacional — em conflito, vale `ARQUITETURA.md`.
+
+> Stack: **Expo SDK 56**, RN 0.85, React 19.2, **expo-router**, **NativeWind v4**,
+> **Reanimated 4 + Moti**, **react-native-svg / expo-linear-gradient / expo-blur**.
 
 ## 1. Princípio único (manda em todas as outras)
 
@@ -24,93 +27,100 @@ Camada de baixo NUNCA importa de camada de cima.
 - `ui/` não importa de `features/` nem de `lib/api/`.
 - `lib/` não importa de `features/` nem de `app/`.
 - `features/` pode usar `ui/` e `lib/`.
-- `app/` orquestra: só monta páginas com `features/`.
+- `app/` orquestra: telas finas que montam `features/`.
 - Uma `feature` NÃO importa de outra feature direto — o contrato compartilhado sobe pra `lib/`.
 
 Se um arquivo precisa quebrar essa direção, ele está no lugar errado. **Mover, não contornar.**
 
-> **Estrutura deste projeto:** SEM prefixo `src/`. As pastas `app/`, `ui/`, `lib/`, `features/` ficam na raiz do projeto. Imports usam o alias `@/*` (mapeado para `./*` no `tsconfig.json`): `@/ui/...`, `@/lib/...`, `@/features/...`. O App Router já existe em `app/`.
+> **Estrutura deste projeto:** tudo sob `src/`. Alias `@/*` → `./src/*`. As rotas
+> ficam em `src/app/` (expo-router).
 
 ## 2. Onde cada coisa vive
 
-| O que é                                   | Onde vai                         |
-|-------------------------------------------|----------------------------------|
-| Rota / página                             | `app/.../page.tsx`               |
-| Layout de rota                            | `app/.../layout.tsx`             |
-| Chamada à API Node (fetch/mutation)       | `lib/api/<recurso>.ts`           |
-| Cliente base da API (baseURL/headers/auth)| `lib/api/client.ts`              |
-| Token visual (cor, espaço, fonte)         | `ui/tokens/`                     |
-| Componente burro reutilizável (Button...) | `ui/primitives/`                 |
-| Composição genérica (FormField, Modal)    | `ui/patterns/`                   |
-| Componente que conhece o domínio          | `features/<feature>/components/` |
-| Hook de domínio                           | `features/<feature>/hooks/`      |
-| Estado de domínio (store)                 | `features/<feature>/store.ts`    |
-| Tipo de domínio                           | `features/<feature>/types.ts`    |
-| Util genérico (sem domínio)               | `lib/utils/`                     |
-| Config / env                              | `lib/config.ts`                  |
+| O que é                                   | Onde vai                              |
+|-------------------------------------------|---------------------------------------|
+| Rota / tela                               | `src/app/.../<rota>.tsx`             |
+| Layout de navegação (Stack/Tabs)          | `src/app/.../_layout.tsx`           |
+| Chamada à API (fetch/mutation)            | `src/lib/api/<recurso>.ts`           |
+| Cliente base da API                       | `src/lib/api/client.ts`              |
+| Tokens de movimento (springs/easings)     | `src/ui/tokens/`                     |
+| Cor/raio (tokens)                         | `tailwind.config.js` + `src/constants/palette.ts` |
+| Primitivo burro reutilizável (Button...)  | `src/ui/primitives/`                 |
+| Composição genérica (MetricTile, Dock)    | `src/ui/patterns/`                   |
+| Componente que conhece o domínio          | `src/features/<feature>/components/` |
+| Hook de domínio                           | `src/features/<feature>/hooks/`      |
+| Tipo de domínio                           | `src/features/<feature>/types.ts`    |
+| Util genérico (sem domínio)               | `src/lib/utils/`                     |
+| Config / env (`EXPO_PUBLIC_*`)            | `src/lib/config.ts`                  |
+| Chrome de tela compartilhado              | `src/components/`                    |
 
 ## 3. Regras invioláveis (NUNCA)
 
-1. **Lógica de API nunca dentro de componente.** Nenhum `fetch`/axios/gateway dentro de `.tsx`. Todo acesso à API Node vive em `lib/api/`; o componente chama uma função de lá.
-2. **Componente em `ui/` nunca conhece domínio.** Se menciona uma entidade do negócio (pedido, produto, clima...), pertence a `features/`, não a `ui/`.
-3. **Nenhuma chave/segredo no client.** Tokens/secrets só no servidor (Server Component, Server Action ou rota `app/api/`).
-4. **Nada de pasta `components/` solta na raiz.** Componente ou é design system (`ui/`) ou é de feature (`features/<x>/components/`). Não existe terceiro lugar.
-5. **Cor/espaçamento/fonte hardcoded é proibido.** Sempre via token (`ui/tokens/`) ou classe do tema. Nada de `#fff` ou `margin: 13px` no JSX.
-6. **Server Action para mutação, nunca fetch no client pra escrever.** Mutações passam por Server Action → `lib/api/`.
+1. **Lógica de API nunca dentro de componente.** Nenhum `fetch` dentro de `.tsx`. Todo acesso à API vive em `lib/api/`; o componente chama uma função de lá.
+2. **Componente em `ui/` nunca conhece domínio.** Se menciona uma entidade do negócio (clima, cidade, alerta...), pertence a `features/`, não a `ui/`.
+3. **Nenhuma chave/segredo no bundle.** Só `EXPO_PUBLIC_*` é público; segredo de verdade fica no backend.
+4. **Texto sempre dentro de `<Text>`.** String solta em `<View>` quebra no RN.
+5. **`components/` só p/ chrome sem domínio.** O resto é design system (`ui/`) ou feature (`features/<x>/components/`).
+6. **Cor/espaço hardcoded é proibido no layout.** Use `className` (NativeWind). Valores imperativos (ícone lucide, SVG, gradiente) usam `@/constants/palette`.
 
-## 4. Design system (`ui/`)
+## 4. Estilo & efeitos (jeito React Native)
 
-- Três níveis, nessa ordem: `tokens/` → `primitives/` → `patterns/`.
-  - `tokens/`: fonte única de cor, espaço, tipografia, raio, sombra.
-  - `primitives/`: tijolos burros (Button, Input, Card, Sheet, Badge, Skeleton).
-  - `patterns/`: composições genéricas de primitivos (FormField = label+input+erro).
-- Primitivo: sem regra de negócio, sem fetch, sem estado global. Aceita `className` e faz forward das props nativas do elemento.
-- Acessibilidade não é opcional: usar Radix por baixo quando houver interação (Dialog, Sheet, Dropdown, Tooltip).
-- Só entra em `ui/` o que serve a QUALQUER projeto sem alteração. Carregou nome de entidade do negócio → vai pra `features/`.
+- Layout/cor: `className` (NativeWind). Tokens em `tailwind.config.js`.
+- Glass: `<GlassCard>` (expo-blur). Não existe `backdrop-filter`.
+- Gradiente: `expo-linear-gradient`; radial/vinheta/halo: `react-native-svg`.
+- Animação: `Moti` (declarativo) + `Reanimated 4` (loops/partículas). Não usar libs de animação feitas para web.
+- Ícones: `lucide-react-native`; ícone de clima é SVG próprio (`WeatherIcon`).
 
-## 5. Features (`features/`)
+## 5. Design system (`ui/`)
 
-- Uma pasta por área de domínio (ex.: `cart/`, `catalog/`, `checkout/`).
-- Estrutura interna padrão:
+- Três níveis: `tokens/` (movimento) → `primitives/` → `patterns/`.
+- Primitivo: sem regra de negócio, sem fetch, sem estado global. Aceita `className`/props nativas.
+- Acessibilidade não é opcional: `accessibilityRole`/`Label`/`State` em tudo interativo.
+- Só entra em `ui/` o que serve a QUALQUER app sem alteração. Carregou nome de entidade → `features/`.
+- Barrel único em `src/ui/index.ts`.
+
+## 6. Features (`features/`)
+
+- Uma pasta por área de domínio (hoje: `weather/`).
   ```
   features/<x>/
   ├── components/   # UI que conhece o domínio
-  ├── hooks/        # ex: useCart
-  ├── store.ts      # estado (Zustand) — só se a feature tiver estado próprio
-  └── types.ts      # tipos do domínio dessa feature
+  ├── hooks/        # ex: useWeather
+  └── types.ts      # tipos do domínio
   ```
-- Feature compõe primitivos de `ui/` — não recria botão/input/etc.
+- Feature compõe primitivos de `ui/` — não recria botão/card/etc.
 
-## 6. Dados / API (`lib/api/`)
+## 7. Dados / API (`lib/api/`)
 
-- Um arquivo por recurso (`products.ts`, `orders.ts`...). Cada função retorna dado tipado ou lança erro. Sem tratar UI aqui.
-- Cliente base único `client.ts` cuida de baseURL, headers e auth.
-- **Leitura**: fetch em Server Component com `next: { revalidate, tags }`.
-- **Escrita**: Server Action chamando `lib/api/`, depois `revalidateTag`.
-- Dado dinâmico autenticado no client: TanStack Query, nunca `fetch` solto em `useEffect`.
+- Um arquivo por recurso (`weather.ts`). Contrato de tipos vive aqui e é reexportado por `features/<x>/types.ts`.
+- Cada função retorna dado tipado ou lança erro. Sem UI.
+- **Hoje é mock**; assinatura `async` pronta pra virar `apiFetch`. Dado dinâmico no futuro: TanStack Query, nunca `fetch` solto em `useEffect`.
 
-## 7. Server vs Client Components
+## 8. Rotas (`app/`) — expo-router
 
-- Default é Server Component. Só `"use client"` quando precisar de estado local, evento de browser, hook de client (useState/useEffect) ou lib que exige DOM.
-- `"use client"` o mais fundo possível na árvore — não marcar a página inteira por causa de um botão.
+- Roteamento por arquivo. `_layout.tsx` = navegador; `(grupo)/` agrupa sem virar segmento.
+- Tabs principais: grupo `(tabs)` com tabBar custom (`FloatingDock`). `Tabs` vem de `expo-router/js-tabs`.
+- Rota de fallback: `src/app/+not-found.tsx`.
+- Tela é fina: busca via `lib/api` e monta a feature. É tudo client (React Native).
 
-## 8. Nomenclatura
+## 9. Nomenclatura
 
-- Componentes: `PascalCase` (arquivo e export) — `CartItem.tsx`.
-- Hooks: `camelCase` com `use` — `useCart.ts`.
-- Funções de API: verbo + recurso — `getOrders`, `createOrder`.
-- Tipos de domínio: `PascalCase` no `types.ts` da feature — `Order`.
-- Pastas: `kebab-case` — `order-tracking/`.
-- Barrel (`index.ts`) só em `ui/`. Não criar barrel em feature.
+- Componentes: `PascalCase` — `CurrentWeather.tsx`.
+- Hooks: `camelCase` com `use` — `useWeather.ts`.
+- Funções de API: verbo + recurso — `getWeather`.
+- Tipos de domínio: `PascalCase` no `types.ts` — `WeatherData`.
+- Barrel (`index.ts`) só em `ui/`.
 
-## 9. Checklist antes de criar um arquivo novo
+## 10. Checklist antes de criar um arquivo novo
 
-1. Isso é design system (reutilizável, sem domínio) ou feature (tem domínio)?
-2. Faz acesso a dado → vai pra `lib/api/`, não pro componente.
-3. Estou importando "pra cima" na direção das camadas? Se sim, parei e repensei.
-4. Estou hardcodando cor/espaço? Se sim, usei token.
-5. Precisa mesmo ser `"use client"`? Se não, deixei Server Component.
+1. Design system (sem domínio) ou feature (com domínio)?
+2. Acesso a dado → `lib/api/`, não no componente.
+3. Importando "pra cima"? Parei e repensei.
+4. Cor/espaço hardcoded? Usei token/`palette`.
+5. Texto em `<Text>`? Efeito usando a lib certa (blur/gradiente/animação)?
 
-## ⚠️ Antes de escrever código Next.js
+## ⚠️ Antes de escrever código Expo
 
-Este projeto usa uma versão do Next.js com **breaking changes** vs. o conhecimento padrão. Ler o guia relevante em `node_modules/next/dist/docs/` antes de escrever código de rota/Server Action/cache. Respeitar avisos de deprecação.
+Este projeto usa **Expo SDK 56** com breaking changes vs. o conhecimento padrão.
+Ler a doc versionada em https://docs.expo.dev/versions/v56.0.0/ antes de mexer em
+rota/navegação/config. Respeitar deprecações (ex.: `Tabs` em `expo-router/js-tabs`).

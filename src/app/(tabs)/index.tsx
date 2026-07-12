@@ -9,8 +9,8 @@ import { palette } from "@/constants/palette";
 
 /**
  * Tela inicial — carrega o clima da cidade padrão (camada lib/api) e monta o
- * WeatherDashboard. Substitui o Server Component da versão Next: aqui o fetch
- * acontece na montagem (mock; vira TanStack Query quando houver backend).
+ * WeatherDashboard. O fetch acontece na montagem (mock; vira TanStack Query
+ * quando houver backend).
  */
 export default function HomeScreen() {
   const [data, setData] = useState<WeatherData | null>(null);

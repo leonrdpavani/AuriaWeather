@@ -23,7 +23,7 @@ interface AnimatedNumberProps {
 }
 
 /**
- * Conta de um valor a outro com easing — porte do AnimatedNumber (framer-motion).
+ * Conta de um valor a outro com easing (contador animado).
  * Anima um TextInput não-editável via `animatedProps` (sem re-render por frame).
  * Reanima sempre que `value` muda (troca de cidade / unidade).
  */
