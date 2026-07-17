@@ -72,8 +72,10 @@ function Cloud({
   scale?: number;
   fill?: string;
 }) {
+  // `transform` como string (SVG): cross-platform. Os props soltos `translateX`/
+  // `translateY`/`scale` no <G> vazam pro DOM no web (react-native-svg web).
   return (
-    <G translateX={x} translateY={y} scale={scale}>
+    <G transform={`translate(${x}, ${y}) scale(${scale})`}>
       <Path
         d="M30 70 a18 18 0 0 1 2 -35 a24 24 0 0 1 44 -4 a16 16 0 0 1 4 39 Z"
         fill={fill}
@@ -161,11 +163,11 @@ function WindLines() {
 function scene(condition: WeatherCondition, isDay: boolean): ReactNode {
   const body = isDay ? <Sun /> : <Moon />;
   const bodySmall = isDay ? (
-    <G translateX={-14} translateY={-14} scale={0.55}>
+    <G transform="translate(-14, -14) scale(0.55)">
       <Sun />
     </G>
   ) : (
-    <G translateX={-10} translateY={-12} scale={0.5}>
+    <G transform="translate(-10, -12) scale(0.5)">
       <Moon />
     </G>
   );

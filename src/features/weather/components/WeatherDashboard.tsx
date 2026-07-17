@@ -96,6 +96,9 @@ export function WeatherDashboard({ initialData }: { initialData: WeatherData }) 
 
       <ScrollView
         showsVerticalScrollIndicator={false}
+        // zIndex explícito: no web (CSS) o fundo absoluto pintaria por cima do
+        // conteúdo estático; no nativo a ordem já resolve. Mantém consistente.
+        style={{ zIndex: 1 }}
         contentContainerStyle={{
           paddingTop: insets.top + 12,
           paddingHorizontal: 16,

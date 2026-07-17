@@ -2,6 +2,7 @@ import { type ReactNode, useState } from "react";
 import {
   type LayoutChangeEvent,
   Pressable,
+  StyleSheet,
   Text,
   View,
 } from "react-native";
@@ -45,7 +46,10 @@ export function FloatingDock({ items, activeId, onSelect }: FloatingDockProps) {
   return (
     <View className="absolute inset-x-0 bottom-5 items-center px-4">
       <View className="overflow-hidden rounded-full border border-glass-border">
-        <BlurView intensity={30} tint="dark" className="flex-row items-center gap-1 p-1.5">
+        {/* BlurView só de fundo (absoluteFill). Layout fica no View — className de
+            layout não aplica de forma confiável direto no BlurView. */}
+        <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill} />
+        <View className="flex-row items-center gap-1 p-1.5">
           {active && (
             <MotiView
               className="absolute rounded-full bg-brand-500"
@@ -74,7 +78,7 @@ export function FloatingDock({ items, activeId, onSelect }: FloatingDockProps) {
               </Pressable>
             );
           })}
-        </BlurView>
+        </View>
       </View>
     </View>
   );

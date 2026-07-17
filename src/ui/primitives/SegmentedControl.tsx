@@ -1,5 +1,5 @@
 import { type ReactNode, useState } from "react";
-import { LayoutChangeEvent, Pressable, Text, View } from "react-native";
+import { type LayoutChangeEvent, Pressable, Text, View } from "react-native";
 import { MotiView } from "moti";
 import { cn } from "@/lib/utils/cn";
 
@@ -20,10 +20,15 @@ interface SegmentedControlProps<T extends string> {
 
 const PADDING = 4; // p-1
 
+type Box = { x: number; width: number };
+
 /**
- * Toggle de segmentos genérico com pílula animada (porte do SegmentedControl).
- * A pílula desliza entre os segmentos (Moti spring). Sem domínio: serve para
- * unidade, abas etc.
+ * Toggle de segmentos genérico com pílula animada. A pílula desliza entre os
+ * segmentos (Moti spring). Sem domínio: serve para unidade, abas etc.
+ *
+ * Cada segmento mede o PRÓPRIO layout (x/largura) e a pílula usa essa medição.
+ * Não derivamos a largura dos filhos a partir do container — isso realimentava
+ * a medição a cada frame e o controle "crescia infinitamente".
  */
 export function SegmentedControl<T extends string>({
   options,
@@ -32,56 +37,51 @@ export function SegmentedControl<T extends string>({
   className,
   accessibilityLabel,
 }: SegmentedControlProps<T>) {
-  const [width, setWidth] = useState(0);
-  const segWidth = width > 0 ? (width - PADDING * 2) / options.length : 0;
-  const activeIndex = Math.max(
-    0,
-    options.findIndex((o) => o.value === value),
-  );
+  const [boxes, setBoxes] = useState<Record<string, Box>>({});
+  const active = boxes[value];
 
-  function onLayout(e: LayoutChangeEvent) {
-    setWidth(e.nativeEvent.layout.width);
+  function onItemLayout(v: string, e: LayoutChangeEvent) {
+    const { x, width } = e.nativeEvent.layout;
+    setBoxes((prev) =>
+      prev[v]?.width === width && prev[v]?.x === x
+        ? prev
+        : { ...prev, [v]: { x, width } },
+    );
   }
 
   return (
     <View
       accessibilityRole="tablist"
       accessibilityLabel={accessibilityLabel}
-      onLayout={onLayout}
       className={cn(
         "relative flex-row self-start rounded-full border border-glass-border bg-glass p-1",
         className,
       )}
     >
-      {segWidth > 0 && (
+      {active && (
         <MotiView
           className="absolute rounded-full bg-brand-500"
-          animate={{ translateX: PADDING + activeIndex * segWidth }}
+          animate={{ translateX: active.x, width: active.width }}
           transition={{ type: "spring", stiffness: 220, damping: 26 }}
-          style={{
-            width: segWidth,
-            top: PADDING,
-            bottom: PADDING,
-            left: 0,
-          }}
+          style={{ top: PADDING, bottom: PADDING, left: 0 }}
         />
       )}
       {options.map((option) => {
-        const active = option.value === value;
+        const isActive = option.value === value;
         return (
           <Pressable
             key={option.value}
             accessibilityRole="tab"
-            accessibilityState={{ selected: active }}
+            accessibilityState={{ selected: isActive }}
+            onLayout={(e) => onItemLayout(option.value, e)}
             onPress={() => onChange(option.value)}
-            style={segWidth > 0 ? { width: segWidth } : undefined}
             className="flex-row items-center justify-center gap-1.5 rounded-full px-4 py-1.5"
           >
             {option.icon}
             <Text
               className={cn(
                 "text-sm font-medium",
-                active ? "text-white" : "text-ink-muted",
+                isActive ? "text-white" : "text-ink-muted",
               )}
             >
               {option.label}
