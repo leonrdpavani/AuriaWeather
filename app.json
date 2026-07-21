@@ -9,8 +9,7 @@
     "userInterfaceStyle": "dark",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.auria.weather",
-      "icon": "./assets/expo.icon"
+      "bundleIdentifier": "com.auria.weather"
     },
     "android": {
       "package": "com.auria.weather",
