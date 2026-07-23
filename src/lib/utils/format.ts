@@ -3,11 +3,18 @@
  */
 
 export type Unit = "celsius" | "fahrenheit";
+export type WindUnit = "kmh" | "mph";
 
 /** Converte uma temperatura em Celsius para a unidade pedida e arredonda. */
 export function toUnit(celsius: number, unit: Unit): number {
   const value = unit === "fahrenheit" ? celsius * (9 / 5) + 32 : celsius;
   return Math.round(value);
+}
+
+/** "15 km/h" / "9 mph" — velocidade de vento formatada a partir de km/h. */
+export function formatWind(kph: number, unit: WindUnit = "kmh"): string {
+  if (unit === "mph") return `${Math.round(kph * 0.621371)} mph`;
+  return `${Math.round(kph)} km/h`;
 }
 
 /** "19°" — temperatura formatada com o símbolo de grau. */

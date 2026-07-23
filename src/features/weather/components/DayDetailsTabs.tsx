@@ -19,7 +19,7 @@ import {
   uvLabel,
 } from "@/features/weather/components/metric-visuals";
 import type { DayTab, DayWeather, Unit } from "@/features/weather/types";
-import { toUnit } from "@/lib/utils/format";
+import { formatWind, toUnit, type WindUnit } from "@/lib/utils/format";
 import { palette } from "@/constants/palette";
 
 const ICON = palette.inkMuted;
@@ -33,10 +33,11 @@ const TABS: SegmentOption<DayTab>[] = [
 interface DayDetailsTabsProps {
   day: DayWeather;
   unit: Unit;
+  windUnit: WindUnit;
 }
 
 /** Abas com as informações detalhadas do DIA SELECIONADO. */
-export function DayDetailsTabs({ day, unit }: DayDetailsTabsProps) {
+export function DayDetailsTabs({ day, unit, windUnit }: DayDetailsTabsProps) {
   const [tab, setTab] = useState<DayTab>("air");
 
   return (
@@ -80,7 +81,7 @@ export function DayDetailsTabs({ day, unit }: DayDetailsTabsProps) {
               <MetricTile
                 icon={<Wind size={15} color={ICON} />}
                 label="Wind"
-                value={`${day.windKph} km/h`}
+                value={formatWind(day.windKph, windUnit)}
               >
                 <Compass deg={day.windDir} />
               </MetricTile>

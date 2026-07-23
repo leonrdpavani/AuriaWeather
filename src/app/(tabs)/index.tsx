@@ -1,29 +1,18 @@
-import { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
-import { getWeather } from "@/lib/api/weather";
-import { config } from "@/lib/config";
+import { useCities } from "@/features/weather/hooks/useCities";
+import { useCityWeather } from "@/features/weather/hooks/useCityWeather";
 import { WeatherDashboard } from "@/features/weather/components/WeatherDashboard";
 import { ScreenBackground } from "@/components/ScreenBackground";
-import type { WeatherData } from "@/features/weather/types";
 import { palette } from "@/constants/palette";
 
 /**
- * Tela inicial — carrega o clima da cidade padrão (camada lib/api) e monta o
- * WeatherDashboard. O fetch acontece na montagem (mock; vira TanStack Query
- * quando houver backend).
+ * Tela inicial — tela fina: lê a cidade ativa (estado global persistido) e
+ * monta o WeatherDashboard com o clima dela. Trocar a cidade ativa (aqui ou na
+ * tela Cities) refaz o fetch automaticamente.
  */
 export default function HomeScreen() {
-  const [data, setData] = useState<WeatherData | null>(null);
-
-  useEffect(() => {
-    let active = true;
-    getWeather(config.defaultCity).then((d) => {
-      if (active) setData(d);
-    });
-    return () => {
-      active = false;
-    };
-  }, []);
+  const { active } = useCities();
+  const { data, isLoading } = useCityWeather(active);
 
   if (!data) {
     return (
@@ -35,5 +24,5 @@ export default function HomeScreen() {
     );
   }
 
-  return <WeatherDashboard initialData={data} />;
+  return <WeatherDashboard data={data} refreshing={isLoading} />;
 }

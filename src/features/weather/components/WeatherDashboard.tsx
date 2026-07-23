@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 import { MotiView } from "moti";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Cloud, Navigation } from "lucide-react-native";
+import { Cloud, Navigation, Star } from "lucide-react-native";
 import { IconButton, SegmentedControl } from "@/ui";
-import { useWeather } from "@/features/weather/hooks/useWeather";
+import { usePreferences } from "@/lib/preferences/preferences";
+import { useCities } from "@/features/weather/hooks/useCities";
 import { CurrentWeather } from "@/features/weather/components/CurrentWeather";
 import { DayDetailsTabs } from "@/features/weather/components/DayDetailsTabs";
 import { DaySelector } from "@/features/weather/components/DaySelector";
@@ -15,7 +16,7 @@ import { CitySearch } from "@/features/weather/components/CitySearch";
 import type { HourlyPoint, Unit, WeatherData } from "@/features/weather/types";
 import { config } from "@/lib/config";
 import { formatWeekday } from "@/lib/utils/format";
-import { stagger } from "@/ui/tokens/motion";
+import { fadeUpFrom, fadeUpTo, stagger } from "@/ui/tokens/motion";
 import { palette } from "@/constants/palette";
 
 const UNIT_OPTIONS = [
@@ -41,12 +42,21 @@ function buildUpcoming(days: WeatherData["days"], nowMs: number): HourlyPoint[] 
   return out;
 }
 
-/** Item de entrada com fade-up escalonado. */
-function Section({ index, children }: { index: number; children: React.ReactNode }) {
+/** Item de entrada com fade-up escalonado (ignorado se reduceMotion). */
+function Section({
+  index,
+  animate,
+  children,
+}: {
+  index: number;
+  animate: boolean;
+  children: ReactNode;
+}) {
+  if (!animate) return <View>{children}</View>;
   return (
     <MotiView
-      from={{ opacity: 0, translateY: 16 }}
-      animate={{ opacity: 1, translateY: 0 }}
+      from={fadeUpFrom}
+      animate={fadeUpTo}
       transition={{ type: "timing", duration: 400, delay: stagger(index) }}
     >
       {children}
@@ -55,26 +65,38 @@ function Section({ index, children }: { index: number; children: React.ReactNode
 }
 
 /**
- * Orquestra a tela de clima: fundo reativo, busca, unidade, herói do dia
- * selecionado, abas de detalhe e o seletor dos próximos dias.
+ * Orquestra a tela de clima: fundo reativo, busca, favoritar, herói do dia
+ * selecionado, abas de detalhe e o seletor dos próximos dias. Unidade e
+ * localidades vêm do estado global persistido (preferências + cidades).
  */
-export function WeatherDashboard({ initialData }: { initialData: WeatherData }) {
-  const {
-    data,
-    unit,
-    setUnit,
-    selectedDayIndex,
-    selectDay,
-    isLoading,
-    selectCity,
-  } = useWeather(initialData);
+export function WeatherDashboard({
+  data,
+  refreshing = false,
+}: {
+  data: WeatherData;
+  refreshing?: boolean;
+}) {
+  const { tempUnit, windUnit, reduceMotion, showAlerts, setPreference } =
+    usePreferences();
+  const { setActive, isSaved, toggleSaved } = useCities();
   const insets = useSafeAreaInsets();
+
+  const [selectedDayIndex, setSelectedDayIndex] = useState(0);
+
+  // Volta pro dia de hoje quando a cidade exibida muda (ajuste no render — sem
+  // efeito, padrão recomendado do React para reagir a mudança de prop).
+  const [shownCity, setShownCity] = useState(data.city);
+  if (shownCity !== data.city) {
+    setShownCity(data.city);
+    setSelectedDayIndex(0);
+  }
 
   const selectedDay = data.days[selectedDayIndex];
   const isToday = selectedDayIndex === 0;
+  const favorited = isSaved(data.city);
+  const anim = !reduceMotion;
 
-  // Lê o relógio do dispositivo uma vez, após a montagem (Date.now() é impuro
-  // e não pode ser chamado durante o render). Antes disso, usa o início do dia.
+  // Relógio do dispositivo lido uma vez após a montagem (impuro no render).
   const [nowMs, setNowMs] = useState<number | null>(null);
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- valor só-do-device (relógio) lido uma vez na montagem
@@ -83,10 +105,7 @@ export function WeatherDashboard({ initialData }: { initialData: WeatherData }) 
 
   const upcoming = useMemo(
     () =>
-      buildUpcoming(
-        data.days,
-        nowMs ?? new Date(data.days[0].date).getTime(),
-      ),
+      buildUpcoming(data.days, nowMs ?? new Date(data.days[0].date).getTime()),
     [data.days, nowMs],
   );
 
@@ -104,11 +123,11 @@ export function WeatherDashboard({ initialData }: { initialData: WeatherData }) 
           paddingHorizontal: 16,
           paddingBottom: 120,
           gap: 20,
-          opacity: isLoading ? 0.6 : 1,
+          opacity: refreshing ? 0.6 : 1,
         }}
       >
         {/* Top bar */}
-        <Section index={0}>
+        <Section index={0} animate={anim}>
           <View className="gap-3">
             <View className="flex-row items-center justify-between">
               <View className="flex-row items-center gap-2">
@@ -118,15 +137,26 @@ export function WeatherDashboard({ initialData }: { initialData: WeatherData }) 
               <SegmentedControl
                 accessibilityLabel="Temperature unit"
                 options={UNIT_OPTIONS}
-                value={unit}
-                onChange={setUnit}
+                value={tempUnit}
+                onChange={(u) => setPreference("tempUnit", u)}
               />
             </View>
             <View className="flex-row items-center gap-2">
-              <CitySearch onSelect={selectCity} className="flex-1" />
+              <CitySearch onSelect={setActive} className="flex-1" />
+              <IconButton
+                label={favorited ? "Remove from saved cities" : "Save this city"}
+                accessibilityState={{ selected: favorited }}
+                onPress={() => toggleSaved(data.city)}
+              >
+                <Star
+                  size={18}
+                  color={favorited ? palette.warning : palette.ink}
+                  fill={favorited ? palette.warning : "transparent"}
+                />
+              </IconButton>
               <IconButton
                 label="Use my location"
-                onPress={() => selectCity(config.defaultCity)}
+                onPress={() => setActive(config.defaultCity)}
               >
                 <Navigation size={18} color={palette.ink} fill={palette.ink} />
               </IconButton>
@@ -135,40 +165,40 @@ export function WeatherDashboard({ initialData }: { initialData: WeatherData }) 
         </Section>
 
         {/* Herói do dia selecionado */}
-        <Section index={1}>
+        <Section index={1} animate={anim}>
           <CurrentWeather
             city={data.city}
             country={data.country}
             label={dayLabel(selectedDayIndex, selectedDay.date)}
             day={selectedDay}
-            unit={unit}
+            unit={tempUnit}
           />
         </Section>
 
         {/* Próximas 24h */}
-        <Section index={2}>
-          <HourlyForecast hours={upcoming} isDay={data.days[0].isDay} unit={unit} showNow />
+        <Section index={2} animate={anim}>
+          <HourlyForecast hours={upcoming} isDay={data.days[0].isDay} unit={tempUnit} showNow />
         </Section>
 
-        {/* Alertas (só hoje) */}
-        {isToday && data.alerts.length > 0 && (
-          <Section index={3}>
+        {/* Alertas (só hoje, se habilitado) */}
+        {isToday && showAlerts && data.alerts.length > 0 && (
+          <Section index={3} animate={anim}>
             <AlertBanner alerts={data.alerts} />
           </Section>
         )}
 
         {/* Abas de detalhe */}
-        <Section index={4}>
-          <DayDetailsTabs day={selectedDay} unit={unit} />
+        <Section index={4} animate={anim}>
+          <DayDetailsTabs day={selectedDay} unit={tempUnit} windUnit={windUnit} />
         </Section>
 
         {/* Seletor de dias */}
-        <Section index={5}>
+        <Section index={5} animate={anim}>
           <DaySelector
             days={data.days}
             selectedIndex={selectedDayIndex}
-            onSelect={selectDay}
-            unit={unit}
+            onSelect={setSelectedDayIndex}
+            unit={tempUnit}
           />
         </Section>
 
